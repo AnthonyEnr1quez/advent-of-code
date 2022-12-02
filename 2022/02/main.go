@@ -26,40 +26,91 @@ func main() {
 	scanner := bufio.NewScanner(file)
 	scanner.Split(bufio.ScanLines)
 
-	score := 0
+	incorrectStratScore := 0
+	correctStratScore := 0
 
 	for scanner.Scan() {
 		vals := strings.Split(scanner.Text(), " ")
 
 		oppMove := vals[0]
-		myMove := vals[1]
+		strat := vals[1]
+
+		// A for Rock, B for Paper, and C for Scissors (opp)
+		// X means you need to lose,
+		// Y means you need to end the round in a draw,
+		// Z means you need to win.
+		// part 2
+		switch oppMove {
+		case "A":
+			if strat == "X" {
+				//scissors
+				correctStratScore += 3
+
+			} else if strat == "Y" {
+				// rock
+				correctStratScore += 1
+				correctStratScore += 3
+			} else if strat == "Z" {
+				// paper
+				correctStratScore += 2
+				correctStratScore += 6
+			}
+		case "B":
+			if strat == "X" {
+				// rock
+				correctStratScore += 1
+			} else if strat == "Y" {
+				// paper
+				correctStratScore += 2
+				correctStratScore += 3
+			} else if strat == "Z" {
+				// scissors
+				correctStratScore += 3
+				correctStratScore += 6
+			}
+		case "C":
+			if strat == "X" {
+				// paper
+				correctStratScore += 2
+			} else if strat == "Y" {
+				// scissors
+				correctStratScore += 3
+				correctStratScore += 3
+			} else if strat == "Z" {
+				// rock
+				correctStratScore += 1
+				correctStratScore += 6
+			}
+		}
 
 		// A for Rock, B for Paper, and C for Scissors (opp)
 		// X for Rock, Y for Paper, and Z for Scissors (me)
-		switch myMove {
+		// part 1
+		switch strat {
 		case "X":
-			score++
+			incorrectStratScore++
 			if oppMove == "A" {
-				score += 3
+				incorrectStratScore += 3
 			} else if oppMove == "C" {
-				score += 6
+				incorrectStratScore += 6
 			}
 		case "Y":
-			score += 2
+			incorrectStratScore += 2
 			if oppMove == "A" {
-				score += 6
+				incorrectStratScore += 6
 			} else if oppMove == "B" {
-				score += 3
+				incorrectStratScore += 3
 			}
 		case "Z":
-			score += 3
+			incorrectStratScore += 3
 			if oppMove == "B" {
-				score += 6
+				incorrectStratScore += 6
 			} else if oppMove == "C" {
-				score +=3
+				incorrectStratScore += 3
 			}
 		}
 	}
 
-	fmt.Println(score)
+	fmt.Println("Incorrect Strategy Score:",incorrectStratScore)
+	fmt.Println("Correct Strategy Score:",correctStratScore)
 }
