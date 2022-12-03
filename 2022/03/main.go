@@ -9,6 +9,8 @@ import (
 	"unicode"
 )
 
+var alphabetUpper, alphabetLower = alphabets()
+
 func main() {
 	file, err := os.Open("input.txt")
 	defer file.Close()
@@ -19,73 +21,37 @@ func main() {
 	scanner := bufio.NewScanner(file)
 	scanner.Split(bufio.ScanLines)
 
-	alphabetUpper, alphabetLower := alphabets()
-
-	var commonPrioritySum, groupPrioritySum, groupCounter int
+	var commonPrioritySum, groupPrioritySum int
 	var groupItems []string
 	for scanner.Scan() {
 		items := scanner.Text()
 
-		groupCounter++
-		groupItems = append(groupItems, items)
-		if groupCounter == 3 {
-			var commonGroupItem rune
-			for _, v := range groupItems[0] {
-				val := string(v)
-				if strings.Contains(groupItems[1], val) && strings.Contains(groupItems[2], val) {
-					commonGroupItem = v
-					break
-				}
-			}
-
-			if unicode.IsUpper(commonGroupItem) {
-				for i, v := range alphabetUpper {
-					if commonGroupItem == v {
-						groupPrioritySum += i + 27
-					}
-				}
-			} else {
-				for i, v := range alphabetLower {
-					if commonGroupItem == v {
-						groupPrioritySum += i + 1
-					}
-				}
-			}
-
-			groupCounter = 0
-			groupItems = nil
-		}
-
 		half := len(items) / 2
 		compartment1 := items[:half]
 		compartment2 := items[half:]
-
-		var commonItem rune
 		for _, v := range compartment1 {
-			value := string(v)
-			if strings.Contains(compartment2, value) {
-				commonItem = v
+			if strings.Contains(compartment2, string(v)) {
+				commonPrioritySum += getItemPriority(v)
 				break
 			}
 		}
 
-		if unicode.IsUpper(commonItem) {
-			for i, v := range alphabetUpper {
-				if commonItem == v {
-					commonPrioritySum += i + 27
+		groupItems = append(groupItems, items)
+		if len(groupItems) == 3 {
+			for _, v := range groupItems[0] {
+				val := string(v)
+				if strings.Contains(groupItems[1], val) && strings.Contains(groupItems[2], val) {
+					groupPrioritySum += getItemPriority(v)
+					break
 				}
 			}
-		} else {
-			for i, v := range alphabetLower {
-				if commonItem == v {
-					commonPrioritySum += i + 1
-				}
-			}
+
+			groupItems = nil
 		}
 	}
 
-	fmt.Println(commonPrioritySum)
-	fmt.Println(groupPrioritySum)
+	fmt.Println("Compartment priority sum:", commonPrioritySum)
+	fmt.Println("Group priority sum:", groupPrioritySum)
 }
 
 func alphabets() (upper, lower []rune) {
@@ -95,6 +61,23 @@ func alphabets() (upper, lower []rune) {
 	}
 	for ch = 'a'; ch <= 'z'; ch++ {
 		lower = append(lower, ch)
+	}
+	return
+}
+
+func getItemPriority(item rune) (priority int) {
+	if unicode.IsUpper(item) {
+		for i, v := range alphabetUpper {
+			if item == v {
+				priority = i + 27
+			}
+		}
+	} else {
+		for i, v := range alphabetLower {
+			if item == v {
+				priority = i + 1
+			}
+		}
 	}
 	return
 }
