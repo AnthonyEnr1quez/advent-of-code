@@ -21,39 +21,71 @@ func main() {
 
 	alphabetUpper, alphabetLower := alphabets()
 
-	var prioritySum int
+	var commonPrioritySum, groupPrioritySum, groupCounter int
+	var groupItems []string
 	for scanner.Scan() {
 		items := scanner.Text()
-		half := len(items) / 2
 
+		groupCounter++
+		groupItems = append(groupItems, items)
+		if groupCounter == 3 {
+			var commonGroupItem rune
+			for _, v := range groupItems[0] {
+				val := string(v)
+				if strings.Contains(groupItems[1], val) && strings.Contains(groupItems[2], val) {
+					commonGroupItem = v
+					break
+				}
+			}
+
+			if unicode.IsUpper(commonGroupItem) {
+				for i, v := range alphabetUpper {
+					if commonGroupItem == v {
+						groupPrioritySum += i + 27
+					}
+				}
+			} else {
+				for i, v := range alphabetLower {
+					if commonGroupItem == v {
+						groupPrioritySum += i + 1
+					}
+				}
+			}
+
+			groupCounter = 0
+			groupItems = nil
+		}
+
+		half := len(items) / 2
 		compartment1 := items[:half]
 		compartment2 := items[half:]
 
-		var common rune
+		var commonItem rune
 		for _, v := range compartment1 {
 			value := string(v)
 			if strings.Contains(compartment2, value) {
-				common = v
+				commonItem = v
 				break
 			}
 		}
-		
-		if unicode.IsUpper(common) {
+
+		if unicode.IsUpper(commonItem) {
 			for i, v := range alphabetUpper {
-				if common == v {
-					prioritySum += i + 27
+				if commonItem == v {
+					commonPrioritySum += i + 27
 				}
 			}
 		} else {
 			for i, v := range alphabetLower {
-				if common == v {
-					prioritySum += i + 1
+				if commonItem == v {
+					commonPrioritySum += i + 1
 				}
 			}
 		}
 	}
-	
-	fmt.Println(prioritySum)
+
+	fmt.Println(commonPrioritySum)
+	fmt.Println(groupPrioritySum)
 }
 
 func alphabets() (upper, lower []rune) {
