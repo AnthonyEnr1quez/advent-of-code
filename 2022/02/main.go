@@ -100,6 +100,6 @@ func main() {
 		}
 	}
 
-	fmt.Println("Incorrect Strategy Score:",incorrectStratScore)
-	fmt.Println("Correct Strategy Score:",correctStratScore)
+	fmt.Println("Incorrect Strategy Score:", incorrectStratScore)
+	fmt.Println("Correct Strategy Score:", correctStratScore)
 }
