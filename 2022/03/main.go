@@ -11,6 +11,7 @@ import (
 
 var alphabetUpper, alphabetLower = alphabets()
 
+// https://adventofcode.com/2022/day/3
 func main() {
 	file, err := os.Open("input.txt")
 	defer file.Close()

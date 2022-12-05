@@ -46,5 +46,5 @@ func main() {
 	sort.Sort(sort.Reverse(sort.IntSlice(cals)))
 
 	fmt.Println("Most calories:", cals[0])
-	fmt.Println("Top 3 calorie sum:", cals[0] + cals[1] + cals[2])
+	fmt.Println("Top 3 calorie sum:", cals[0]+cals[1]+cals[2])
 }
