@@ -21,6 +21,7 @@ func main() {
 	scanner.Split(bufio.ScanLines)
 
 	var fullyContained int
+	var partiallyContained int
 	for scanner.Scan() {
 		val := scanner.Text()
 		pairs := strings.Split(val, ",")
@@ -36,6 +37,11 @@ func main() {
 		if (elf1Min <= elf2Min && elf1Max >= elf2Max) || (elf2Min <= elf1Min && elf2Max >= elf1Max) {
 			fullyContained++
 		}
+
+		if elf1Max >= elf2Min && elf1Min <= elf2Max {
+			partiallyContained++
+		}
 	}
-	fmt.Println(fullyContained)
+	fmt.Println("Fully contained assignment pairs:", fullyContained)
+	fmt.Println("Partially container assignment pairs:", partiallyContained)
 }
