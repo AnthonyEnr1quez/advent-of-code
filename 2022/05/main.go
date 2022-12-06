@@ -63,20 +63,31 @@ func main() {
 			}
 		}
 
-		// move the crates
+		// move the crates 1 by 1
+		// if val != "" && val[:4] == "move" {
+		// 	values := strings.Split(val, " ")
+		// 	crateCount, _ := strconv.Atoi(values[1])
+		// 	from, _ := strconv.Atoi(values[3])
+		// 	to, _ := strconv.Atoi(values[5])
+
+		// 	for i := 1; i <= crateCount; i++ {
+		// 		crate, _ := stacks[from].Pop()
+		// 		if err != nil {
+		// 			log.Fatalln("Stack", from, ",", err.Error())
+		// 		}
+		// 		stacks[to].Push(crate)
+		// 	}
+		// }
+
+		// move the crates as groups
 		if val != "" && val[:4] == "move" {
 			values := strings.Split(val, " ")
 			crateCount, _ := strconv.Atoi(values[1])
 			from, _ := strconv.Atoi(values[3])
 			to, _ := strconv.Atoi(values[5])
 
-			for i := 1; i <= crateCount; i++ {
-				crate, _ := stacks[from].Pop()
-				if err != nil {
-					log.Fatalln("Stack", from, ",", err.Error())
-				}
-				stacks[to].Push(crate)
-			}
+			crates, _ := stacks[from].PopMultiple(crateCount)
+			stacks[to].PushMultiple(crates)
 		}
 	}
 
@@ -101,6 +112,12 @@ func (s *Stack[T]) Push(val T) {
 	s.vals = append(s.vals, val)
 }
 
+func (s *Stack[T]) PushMultiple(vals []T) {
+	for _, v := range vals {
+		s.Push(v)
+	}
+}
+
 func (s *Stack[T]) Pop() (val T, err error) {
 	len := len(s.vals)
 	if len == 0 {
@@ -109,6 +126,29 @@ func (s *Stack[T]) Pop() (val T, err error) {
 
 	val = s.vals[len-1]
 	s.vals = s.vals[:len-1]
+
+	return
+}
+
+func (s *Stack[T]) PopMultiple(amount int) (vals []T, err error) {
+	len := len(s.vals)
+	if len-amount < 0 {
+		return nil, errors.New(fmt.Sprintf("Not enough values in stack to remove: %d", amount))
+	}
+
+	reverseVals := make([]T, amount)
+	for i := 0; i < amount; i++ {
+		val, err := s.Pop()
+		if err != nil {
+			return nil, err
+		}
+		reverseVals[i] = val
+	}
+
+	// TODO dirty reverse
+	for i := amount - 1; i >= 0; i-- {
+		vals = append(vals, reverseVals[i])
+	}
 
 	return
 }
