@@ -21,7 +21,7 @@ func main() {
 	scanner.Split(bufio.ScanLines)
 
 	var counter, stackCount int
-	var stacks map[int]*Stack[string]
+	var cm9000Stacks, cm9001Stacks map[int]*Stack[string]
 
 	for scanner.Scan() {
 		counter++
@@ -30,10 +30,12 @@ func main() {
 		// init the stacks
 		if counter == 1 {
 			stackCount = (len(val) - (len(val) / 4)) / 3
-			stacks = make(map[int]*Stack[string], stackCount)
+			cm9000Stacks = make(map[int]*Stack[string], stackCount)
+			cm9001Stacks = make(map[int]*Stack[string], stackCount)
 
 			for i := 1; i <= stackCount; i++ {
-				stacks[i] = &Stack[string]{}
+				cm9000Stacks[i] = &Stack[string]{}
+				cm9001Stacks[i] = &Stack[string]{}
 			}
 		}
 
@@ -43,7 +45,7 @@ func main() {
 			for i := 1; i <= len(val); i += 4 {
 				crate := val[i : i+1]
 				if crate != " " {
-					stacks[crossStackCounter].Push(val[i : i+1])
+					cm9000Stacks[crossStackCounter].Push(val[i : i+1])
 				}
 
 				crossStackCounter++
@@ -52,56 +54,51 @@ func main() {
 
 		// reverse the stacks
 		if val == "" {
-			for i := range stacks {
+			for i := range cm9000Stacks {
 				correctOrderStack := Stack[string]{}
-				popped, err := stacks[i].Pop()
+				popped, err := cm9000Stacks[i].Pop()
 				for err == nil {
 					correctOrderStack.Push(popped)
-					popped, err = stacks[i].Pop()
+					popped, err = cm9000Stacks[i].Pop()
 				}
-				stacks[i] = &correctOrderStack
+				cm9000Stacks[i] = &correctOrderStack
+			}
+
+			// copy stacks
+			for k := range cm9000Stacks {
+				cm9001Stacks[k].vals = append(cm9001Stacks[k].vals, cm9000Stacks[k].vals...)
 			}
 		}
 
-		// move the crates 1 by 1
-		// if val != "" && val[:4] == "move" {
-		// 	values := strings.Split(val, " ")
-		// 	crateCount, _ := strconv.Atoi(values[1])
-		// 	from, _ := strconv.Atoi(values[3])
-		// 	to, _ := strconv.Atoi(values[5])
-
-		// 	for i := 1; i <= crateCount; i++ {
-		// 		crate, _ := stacks[from].Pop()
-		// 		if err != nil {
-		// 			log.Fatalln("Stack", from, ",", err.Error())
-		// 		}
-		// 		stacks[to].Push(crate)
-		// 	}
-		// }
-
-		// move the crates as groups
 		if val != "" && val[:4] == "move" {
 			values := strings.Split(val, " ")
 			crateCount, _ := strconv.Atoi(values[1])
 			from, _ := strconv.Atoi(values[3])
 			to, _ := strconv.Atoi(values[5])
 
-			crates, _ := stacks[from].PopMultiple(crateCount)
-			stacks[to].PushMultiple(crates)
+			// move the crates 1 by 1
+			for i := 1; i <= crateCount; i++ {
+				crate, err := cm9000Stacks[from].Pop()
+				if err != nil {
+					log.Fatalln("Stack", from, ",", err.Error())
+				}
+				cm9000Stacks[to].Push(crate)
+			}
+
+			// move the crates as groups
+			crates, err := cm9001Stacks[from].PopMultiple(crateCount)
+			if err != nil {
+				log.Fatalln("Stack", from, ",", err.Error())
+			}
+			cm9001Stacks[to].PushMultiple(crates)
 		}
 	}
 
-	// get the crates on top of each stack
-	topCrates := ""
-	for i := 1; i <= len(stacks); i++ {
-		crate, err := stacks[i].Peek()
-		if err != nil {
-			log.Fatalln("Stack", i, ",", err.Error())
-		}
-		topCrates += crate
-	}
+	cm9000topCrates, _ := getTopCrates(cm9000Stacks)
+	cm9001topCrates, _ := getTopCrates(cm9001Stacks)
 
-	fmt.Print(topCrates)
+	fmt.Println("CrateMover 9000 top crates:", cm9000topCrates)
+	fmt.Println("CrateMover 9001 top crates:", cm9001topCrates)
 }
 
 type Stack[T any] struct {
@@ -145,7 +142,7 @@ func (s *Stack[T]) PopMultiple(amount int) (vals []T, err error) {
 		reverseVals[i] = val
 	}
 
-	// TODO dirty reverse
+	// dirty reverse lol
 	for i := amount - 1; i >= 0; i-- {
 		vals = append(vals, reverseVals[i])
 	}
@@ -160,5 +157,16 @@ func (s *Stack[T]) Peek() (val T, err error) {
 	}
 
 	val = s.vals[len-1]
+	return
+}
+
+func getTopCrates(stacks map[int]*Stack[string]) (topCrates string, err error) {
+	for i := 1; i <= len(stacks); i++ {
+		crate, peekErr := stacks[i].Peek()
+		if peekErr != nil {
+			err = errors.New(fmt.Sprint("Stack", i, ",", peekErr.Error()))
+		}
+		topCrates += crate
+	}
 	return
 }
