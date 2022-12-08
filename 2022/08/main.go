@@ -51,12 +51,12 @@ func main() {
 			for x := 1; x < length-1; x++ {
 				scenicScore := 1
 				visible := false
-				for _, direction := range  directions{
+				for _, direction := range directions {
 					visibility, distance := from(direction, x, y, grid)
 					if !visible {
 						visible = visibility
 					}
-					
+
 					scenicScore *= distance
 				}
 

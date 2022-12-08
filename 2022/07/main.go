@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	totalDiskSize = 70000000
+	totalDiskSize        = 70000000
 	unusedDiskSizeNeeded = 30000000
 )
 
