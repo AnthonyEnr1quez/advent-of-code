@@ -9,6 +9,11 @@ import (
 	"strings"
 )
 
+const (
+	totalDiskSize = 70000000
+	unusedDiskSizeNeeded = 30000000
+)
+
 func main() {
 	file, err := os.Open("input.txt")
 	defer file.Close()
@@ -64,11 +69,21 @@ func main() {
 	for _, dir := range validDeletionDirs {
 		sizeOfValidDeletionDirs += dir.Size()
 	}
-	fmt.Println(sizeOfValidDeletionDirs)
-}
 
-// TODO remove
-func UNUSED(x ...interface{}) {}
+	sizeStillNeededToFree := unusedDiskSizeNeeded - (totalDiskSize - rootDir.Size())
+
+	var dirToDelete *Directory
+	for _, child := range rootDir.AllChildren() {
+		if dirToDelete == nil && child.Size() >= sizeStillNeededToFree {
+			dirToDelete = child
+		} else if child.Size() >= sizeStillNeededToFree && child.Size() < dirToDelete.Size() {
+			dirToDelete = child
+		}
+	}
+
+	fmt.Println("Sum of directory sizes with <= 100000:", sizeOfValidDeletionDirs)
+	fmt.Println("Size of directory to delete:", dirToDelete.Size())
+}
 
 type File struct {
 	Name string
@@ -93,13 +108,20 @@ func (d *Directory) Size() (size int) {
 }
 
 func (d *Directory) FindValidDeletionDirs() (dirs []*Directory) {
-	for _, dir := range d.Directories {
-		if len(dir.Directories) != 0 {
-			dirs = append(dirs, dir.FindValidDeletionDirs()...)
-		}
+	for _, dir := range d.AllChildren() {
 		if dir.Size() <= 100000 {
 			dirs = append(dirs, dir)
 		}
+	}
+	return
+}
+
+func (d *Directory) AllChildren() (dirs []*Directory) {
+	for _, dir := range d.Directories {
+		if len(dir.Directories) != 0 {
+			dirs = append(dirs, dir.AllChildren()...)
+		}
+		dirs = append(dirs, dir)
 	}
 	return
 }
