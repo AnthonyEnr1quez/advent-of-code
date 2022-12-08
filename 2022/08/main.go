@@ -36,68 +36,98 @@ func main() {
 		counter++
 	}
 
+	directions := []func(int, int, int, int, [][]string, bool) (bool, int){up, down, left, right}
 	visibleTrees := 0
+	maxScenicScore := 0
 	for y := range grid {
-		len := len(grid[y])
+		length := len(grid[y])
 		switch y {
 		case 0:
-			visibleTrees += len
-		case len - 1:
-			visibleTrees += len
+			visibleTrees += length
+		case length - 1:
+			visibleTrees += length
 		default:
 			visibleTrees += 2 // edge trees
-			for x := 1; x < len-1; x++ {
-				if visibleFrom(up, x, y, grid) || visibleFrom(right, x, y, grid) || visibleFrom(down, x, y, grid) || visibleFrom(left, x, y, grid) {
+			for x := 1; x < length-1; x++ {
+				scenicScore := 1
+				visible := false
+				for _, direction := range  directions{
+					visibility, distance := from(direction, x, y, grid)
+					if !visible {
+						visible = visibility
+					}
+					
+					scenicScore *= distance
+				}
+
+				if visible {
 					visibleTrees++
+				}
+
+				if scenicScore > maxScenicScore {
+					maxScenicScore = scenicScore
 				}
 			}
 		}
 	}
 
-	fmt.Println(visibleTrees)
+	fmt.Println("Visible trees:", visibleTrees)
+	fmt.Println("Max scenic score:", maxScenicScore)
 }
 
-func visibleFrom(f func(int, int, int, [][]string) bool, x, y int, grid [][]string) bool {
+func from(direction func(int, int, int, int, [][]string, bool) (bool, int), x, y int, grid [][]string) (bool, int) {
 	height, _ := strconv.Atoi(grid[y][x])
-	return f(x, y, height, grid)
+	return direction(x, y, height, 0, grid, true)
 }
 
-func up(x, y, height int, grid [][]string) bool {
+func up(x, y, height, distance int, grid [][]string, visible bool) (bool, int) {
 	for i := y - 1; i >= 0; i-- {
 		treeHeight, _ := strconv.Atoi(grid[i][x])
-		if height <= treeHeight {
-			return false
+		if visible {
+			distance++
+			if height <= treeHeight {
+				visible = false
+			}
 		}
 	}
-	return true
+	return visible, distance
 }
 
-func down(x, y, height int, grid [][]string) bool {
+func down(x, y, height, distance int, grid [][]string, visible bool) (bool, int) {
 	for i := y + 1; i < len(grid); i++ {
 		treeHeight, _ := strconv.Atoi(grid[i][x])
-		if height <= treeHeight {
-			return false
+		if visible {
+			distance++
+			if height <= treeHeight {
+				visible = false
+			}
 		}
 	}
-	return true
+	return visible, distance
 }
 
-func right(x, y, height int, grid [][]string) bool {
+func right(x, y, height, distance int, grid [][]string, visible bool) (bool, int) {
 	for i := x + 1; i < len(grid[y]); i++ {
 		treeHeight, _ := strconv.Atoi(grid[y][i])
-		if height <= treeHeight {
-			return false
+		if visible {
+			distance++
+			if height <= treeHeight {
+				visible = false
+			}
 		}
 	}
-	return true
+	return visible, distance
 }
 
-func left(x, y, height int, grid [][]string) bool {
+func left(x, y, height, distance int, grid [][]string, visible bool) (bool, int) {
 	for i := x - 1; i >= 0; i-- {
 		treeHeight, _ := strconv.Atoi(grid[y][i])
-		if height <= treeHeight {
-			return false
+		if visible {
+			distance++
+			if height <= treeHeight {
+				visible = false
+			}
 		}
 	}
-	return true
+	return visible, distance
 }
