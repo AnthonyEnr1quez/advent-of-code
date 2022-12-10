@@ -30,18 +30,18 @@ func main() {
 	xCord := 600
 	yCord := 600
 	var grid Grid
-	grid.Points = make([][]*Point, yCord)
-	for y := range grid.Points {
-		grid.Points[y] = make([]*Point, xCord)
+	grid = make([][]*Point, yCord)
+	for y := range grid {
+		grid[y] = make([]*Point, xCord)
 		for x := 0; x < xCord; x++ {
-			grid.Points[y][x] = &Point{
+			grid[y][x] = &Point{
 				X: x,
 				Y: y,
 			}
 		}
 	}
 
-	head := grid.Points[300][300]
+	head := grid[300][300]
 	tail := head
 
 	for _, motion := range motions {
@@ -55,28 +55,28 @@ func main() {
 					tail = head
 					tail.Visited = true
 				}
-				head = grid.Points[head.Y+1][head.X]
+				head = grid[head.Y+1][head.X]
 			case "D":
 				// Tail above Head
 				if tail.Y > head.Y {
 					tail = head
 					tail.Visited = true
 				}
-				head = grid.Points[head.Y-1][head.X]
+				head = grid[head.Y-1][head.X]
 			case "R":
 				// Tail left of Head
 				if tail.X < head.X {
 					tail = head
 					tail.Visited = true
 				}
-				head = grid.Points[head.Y][head.X+1]
+				head = grid[head.Y][head.X+1]
 			case "L":
 				// Tail right of Head
 				if tail.X > head.X {
 					tail = head
 					tail.Visited = true
 				}
-				head = grid.Points[head.Y][head.X-1]
+				head = grid[head.Y][head.X-1]
 			}
 		}
 	}
@@ -84,9 +84,7 @@ func main() {
 	fmt.Println(grid.Visited(xCord, yCord))
 }
 
-type Grid struct {
-	Points [][]*Point
-}
+type Grid [][]*Point
 
 type Point struct {
 	X, Y    int
@@ -98,12 +96,12 @@ type Motion struct {
 	Steps     int
 }
 
-func (g *Grid) Print(xCord, yCord int, head, tail *Point) {
+func (g Grid) Print(xCord, yCord int, head, tail *Point) {
 	for y := yCord - 1; y >= 0; y-- {
 		for x := 0; x < xCord; x++ {
-			if g.Points[y][x] == head {
+			if g[y][x] == head {
 				fmt.Print("H")
-			} else if g.Points[y][x] == tail {
+			} else if g[y][x] == tail {
 				fmt.Print("T")
 			} else {
 				fmt.Print(".")
@@ -113,10 +111,10 @@ func (g *Grid) Print(xCord, yCord int, head, tail *Point) {
 	}
 }
 
-func (g *Grid) Visited(xCord, yCord int) (visited int) {
+func (g Grid) Visited(xCord, yCord int) (visited int) {
 	for y := yCord - 1; y >= 0; y-- {
 		for x := 0; x < xCord; x++ {
-			if g.Points[y][x].Visited {
+			if g[y][x].Visited {
 				visited++
 			}
 		}
