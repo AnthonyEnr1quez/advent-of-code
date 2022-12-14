@@ -24,19 +24,65 @@ func main() {
 
 	register := 1
 	cycle := 0
+
+	rows := [6]string{}
+	rowIndex := 0
+	colIndex := 0
+
 	for scanner.Scan() {
 		instruction := scanner.Text()
 
+		char := "."
+
 		if strings.Contains(instruction, "noop") {
-			cycle++
-			registerByCycleValue[cycle] = register
-		} else {
-			cycle++
-			registerByCycleValue[cycle] = register
-			value, _ := strconv.Atoi(strings.Split(instruction, " ")[1])
+			if colIndex == register || colIndex == register-1 || colIndex == register+1 {
+				char = "#"
+			}
+
+			rows[rowIndex] += char
+			colIndex++
 
 			cycle++
 			registerByCycleValue[cycle] = register
+
+			if colIndex > 39 {
+				colIndex = 0
+				rowIndex++
+			}
+		} else {
+			if colIndex == register || colIndex == register-1 || colIndex == register+1 {
+				char = "#"
+			}
+
+			rows[rowIndex] += char
+			colIndex++
+
+			cycle++
+			registerByCycleValue[cycle] = register
+
+			if colIndex > 39 {
+				colIndex = 0
+				rowIndex++
+			}
+
+			value, _ := strconv.Atoi(strings.Split(instruction, " ")[1])
+
+			char := "."
+			if colIndex == register || colIndex == register-1 || colIndex == register+1 {
+				char = "#"
+			}
+
+			rows[rowIndex] += char
+			colIndex++
+
+			cycle++
+			registerByCycleValue[cycle] = register
+
+			if colIndex > 39 {
+				colIndex = 0
+				rowIndex++
+			}
+
 			register += value
 		}
 	}
@@ -47,4 +93,7 @@ func main() {
 	}
 
 	fmt.Println(signalStrengths)
+
+	formattedAnswer := fmt.Sprintf("%s\n%s\n%s\n%s\n%s\n%s", rows[0], rows[1], rows[2], rows[3], rows[4], rows[5])
+	fmt.Println(formattedAnswer)
 }
