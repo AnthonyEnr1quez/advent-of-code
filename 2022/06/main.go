@@ -7,6 +7,7 @@ import (
 	"os"
 )
 
+// https://adventofcode.com/2022/day/6
 func main() {
 	file, err := os.Open("input.txt")
 	defer file.Close()

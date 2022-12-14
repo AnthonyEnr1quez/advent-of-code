@@ -14,6 +14,7 @@ const (
 	unusedDiskSizeNeeded = 30000000
 )
 
+// https://adventofcode.com/2022/day/7
 func main() {
 	file, err := os.Open("input.txt")
 	defer file.Close()

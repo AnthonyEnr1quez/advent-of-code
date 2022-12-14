@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// https://adventofcode.com/2022/day/9
 func main() {
 	file, err := os.Open("input.txt")
 	defer file.Close()
