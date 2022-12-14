@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -27,52 +28,69 @@ func main() {
 		motions = append(motions, Motion{Direction: motion[0], Steps: steps})
 	}
 
-	head := Point{X: 0, Y: 0}
-	tail := Point{X: 0, Y: 0}
+	dosKnots := simulateRope(2, motions)
+	diezKnots := simulateRope(10, motions)
 
-	visited := make(map[Point]struct{})
+	fmt.Println("Positions tail visited using rope with 2 knots:", dosKnots)
+	fmt.Println("Positions tail visited using rope with 10 knots:", diezKnots)
+}
 
-	for _, motion := range motions {
-		for i := 1; i <= motion.Steps; i++ {
-			switch motion.Direction {
-			case "U":
-				// Tail below Head
-				if tail.Y < head.Y {
-					tail = head
-				}
-				head.Y++
-			case "D":
-				// Tail above Head
-				if tail.Y > head.Y {
-					tail = head
-				}
-				head.Y--
-			case "R":
-				// Tail left of Head
-				if tail.X < head.X {
-					tail = head
-				}
-				head.X++
-			case "L":
-				// Tail right of Head
-				if tail.X > head.X {
-					tail = head
-				}
-				head.X--
-			}
-
-			visited[tail] = struct{}{}
-		}
-	}
-
-	fmt.Println(len(visited))
+type Motion struct {
+	Direction string
+	Steps     int
 }
 
 type Point struct {
 	X, Y int
 }
 
-type Motion struct {
-	Direction string
-	Steps     int
+func (p *Point) touches(other Point) bool {
+	return math.Abs(float64(p.X - other.X)) <= 1 && math.Abs(float64(p.Y - other.Y)) <= 1
+}
+
+func (p *Point) moveTowards(other Point) {
+	sign := func(focus, other int) (val int) {
+		if math.Signbit(float64(other - focus)) {
+			val = -1
+		} else if other - focus != 0 {
+			val = 1
+		}
+		return
+	}
+
+	p.X += sign(p.X, other.X)
+	p.Y += sign(p.Y, other.Y)
+}
+
+func simulateRope(knots int, motions []Motion) int {
+	rope := make([]Point, knots)
+	tailVisited := make(map[Point]struct{})
+
+	for _, motion := range motions {
+		for i := 1; i <= motion.Steps; i++ {
+			switch motion.Direction {
+			case "U":
+				rope[0].Y++
+			case "D":
+				rope[0].Y--
+			case "R":
+				rope[0].X++
+			case "L":
+				rope[0].X--
+			}
+
+			for j := 0; j < knots-1; j++ {
+				head := &rope[j]
+				tail := &rope[j+1]
+
+				if !head.touches(*tail) {
+					tail.moveTowards(*head)
+				}
+			}
+
+			tailVisited[rope[knots-1]] = struct{}{}
+		}
+	}
+
+	return len(tailVisited)
 }
