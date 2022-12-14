@@ -45,14 +45,14 @@ type Point struct {
 }
 
 func (p *Point) touches(other Point) bool {
-	return math.Abs(float64(p.X - other.X)) <= 1 && math.Abs(float64(p.Y - other.Y)) <= 1
+	return math.Abs(float64(p.X-other.X)) <= 1 && math.Abs(float64(p.Y-other.Y)) <= 1
 }
 
 func (p *Point) moveTowards(other Point) {
 	sign := func(focus, other int) (val int) {
 		if math.Signbit(float64(other - focus)) {
 			val = -1
-		} else if other - focus != 0 {
+		} else if other-focus != 0 {
 			val = 1
 		}
 		return
