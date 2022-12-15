@@ -21,7 +21,8 @@ func main() {
 	scanner := bufio.NewScanner(file)
 	scanner.Split(bufio.ScanLines)
 
-	monkeys := make(map[int]*Monkey)
+	coolMonkeys := make(map[int]*Monkey)
+	scaryMonkeys := make(map[int]*Monkey)
 	inputs := []string{}
 
 	for scanner.Scan() {
@@ -31,61 +32,109 @@ func main() {
 			inputs = append(inputs, input)
 		} else {
 			name, monkey := newMonkey(inputs)
-			monkeys[name] = monkey
+			coolMonkeys[name] = monkey
+
+			name, monkey = newMonkey(inputs)
+			scaryMonkeys[name] = monkey
 
 			// reset inputs
 			inputs = []string{}
 		}
 	}
 
-	// add the last monkey, not added during scanning
-	name, monkey := newMonkey(inputs)
-	monkeys[name] = monkey
+	// add the last coolMonkey, not added during scanning
+	name, coolMonkey := newMonkey(inputs)
+	coolMonkeys[name] = coolMonkey
 
-	for round := 1; round <= 20; round++ {
-		for name := 0; name < len(monkeys); name++ {
-			monkey = monkeys[name]
+	name, scaryMonkey := newMonkey(inputs)
+	scaryMonkeys[name] = scaryMonkey
 
-			for _, item := range monkey.Items {
+	for round := 1; round <= 10000; round++ {
+		for name := 0; name < len(coolMonkeys); name++ {
+			coolMonkey = coolMonkeys[name]
+			scaryMonkey = scaryMonkeys[name]
+
+			if round <= 20 {
+				for _, item := range coolMonkey.Items {
+					var worryLevel, opValue, destination int
+
+					if coolMonkey.Operation.Value == "old" {
+						opValue = item
+					} else {
+						val, _ := strconv.Atoi(coolMonkey.Operation.Value)
+						opValue = val
+					}
+
+					if coolMonkey.Operation.Symbol == "*" {
+						worryLevel = item * opValue
+					} else {
+						worryLevel = item + opValue
+					}
+
+					coolMonkey.Inspections++
+					postInspectionWorryLevel := worryLevel / 3
+
+					if postInspectionWorryLevel%coolMonkey.Test.Value == 0 {
+						destination = coolMonkey.Test.TrueDest
+					} else {
+						destination = coolMonkey.Test.FalseDest
+					}
+
+					coolMonkeys[destination].Items = append(coolMonkeys[destination].Items, postInspectionWorryLevel)
+				}
+				coolMonkey.Items = []int{}
+			}
+
+			for _, item := range scaryMonkey.Items {
 				var worryLevel, opValue, destination int
 
-				if monkey.Operation.Value == "old" {
+				if scaryMonkey.Operation.Value == "old" {
 					opValue = item
 				} else {
-					val, _ := strconv.Atoi(monkey.Operation.Value)
+					val, _ := strconv.Atoi(scaryMonkey.Operation.Value)
 					opValue = val
 				}
 
-				if monkey.Operation.Symbol == "*" {
+				if scaryMonkey.Operation.Symbol == "*" {
 					worryLevel = item * opValue
 				} else {
 					worryLevel = item + opValue
 				}
 
-				monkey.Inspections++
-				postInspectionWorryLevel := worryLevel / 3
+				scaryMonkey.Inspections++
+				// postInspectionWorryLevel := worryLevel / 3
 
-				if postInspectionWorryLevel%monkey.Test.Value == 0 {
-					destination = monkey.Test.TrueDest
+				if worryLevel%scaryMonkey.Test.Value == 0 {
+					destination = scaryMonkey.Test.TrueDest
 				} else {
-					destination = monkey.Test.FalseDest
+					destination = scaryMonkey.Test.FalseDest
 				}
 
-				monkeys[destination].Items = append(monkeys[destination].Items, postInspectionWorryLevel)
+				scaryMonkeys[destination].Items = append(scaryMonkeys[destination].Items, worryLevel)
 			}
-			monkey.Items = []int{}
+			scaryMonkey.Items = []int{}
 		}
 	}
 
-	inspections := make([]int, len(monkeys))
-	for i := range inspections {
-		inspections[i] = monkeys[i].Inspections
+	coolInspections := make([]int, len(coolMonkeys))
+	for i := range coolInspections {
+		coolInspections[i] = coolMonkeys[i].Inspections
 	}
-	sort.Ints(inspections)
+	sort.Ints(coolInspections)
 
-	monkeyBusiness := inspections[len(inspections)-1] * inspections[len(inspections)-2]
+	coolMonkeyBusiness := coolInspections[len(coolInspections)-1] * coolInspections[len(coolInspections)-2]
 
-	fmt.Println(monkeyBusiness)
+	fmt.Println(coolMonkeyBusiness)
+
+	scaryInspections := make([]int, len(scaryMonkeys))
+	for i := range scaryInspections {
+		scaryInspections[i] = scaryMonkeys[i].Inspections
+	}
+	sort.Ints(scaryInspections)
+
+	scaryMonkeyBusiness := scaryInspections[len(scaryInspections)-1] * scaryInspections[len(scaryInspections)-2]
+
+	fmt.Println(scaryMonkeyBusiness)
 }
 
 type Monkey struct {
