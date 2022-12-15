@@ -20,80 +20,54 @@ func main() {
 	scanner := bufio.NewScanner(file)
 	scanner.Split(bufio.ScanLines)
 
-	registerByCycleValue := make(map[int]int)
-
+	var yIdx, xIdx, cycle, signalStrengths int
 	register := 1
-	cycle := 0
-
-	rows := [6]string{}
-	rowIndex := 0
-	colIndex := 0
+	crt := [6]string{}
 
 	for scanner.Scan() {
 		instruction := scanner.Text()
 
-		char := "."
+		iterations := 1
+		val := 0
 
-		if strings.Contains(instruction, "noop") {
-			if colIndex == register || colIndex == register-1 || colIndex == register+1 {
-				char = "#"
-			}
-
-			rows[rowIndex] += char
-			colIndex++
-
-			cycle++
-			registerByCycleValue[cycle] = register
-
-			if colIndex > 39 {
-				colIndex = 0
-				rowIndex++
-			}
-		} else {
-			if colIndex == register || colIndex == register-1 || colIndex == register+1 {
-				char = "#"
-			}
-
-			rows[rowIndex] += char
-			colIndex++
-
-			cycle++
-			registerByCycleValue[cycle] = register
-
-			if colIndex > 39 {
-				colIndex = 0
-				rowIndex++
-			}
-
-			value, _ := strconv.Atoi(strings.Split(instruction, " ")[1])
-
-			char := "."
-			if colIndex == register || colIndex == register-1 || colIndex == register+1 {
-				char = "#"
-			}
-
-			rows[rowIndex] += char
-			colIndex++
-
-			cycle++
-			registerByCycleValue[cycle] = register
-
-			if colIndex > 39 {
-				colIndex = 0
-				rowIndex++
-			}
-
-			register += value
+		if !strings.Contains(instruction, "noop") {
+			iterations = 2
+			val, _ = strconv.Atoi(strings.Split(instruction, " ")[1])
 		}
+
+		for i := 1; i <= iterations; i++ {
+			pixel := "."
+
+			if xIdx == register || xIdx == register-1 || xIdx == register+1 {
+				pixel = "#"
+			}
+
+			crt[yIdx] += pixel
+			xIdx++
+
+			cycle++
+			signalStrengths += signal(cycle, register)
+
+			if xIdx > 39 {
+				xIdx = 0
+				yIdx++
+			}
+		}
+
+		register += val
 	}
 
-	signalStrengths := 0
-	for _, v := range []int{20, 60, 100, 140, 180, 220} {
-		signalStrengths += registerByCycleValue[v] * v
+	fmt.Println("Sum of interesting signal strengths:", signalStrengths)
+
+	fmt.Println("\nCRT screen image ↓")
+	for _, row := range crt {
+		fmt.Println(row)
 	}
+}
 
-	fmt.Println(signalStrengths)
-
-	formattedAnswer := fmt.Sprintf("%s\n%s\n%s\n%s\n%s\n%s", rows[0], rows[1], rows[2], rows[3], rows[4], rows[5])
-	fmt.Println(formattedAnswer)
+func signal(cycle, register int) (strength int) {
+	if cycle == 20 || cycle == 60 || cycle == 100 || cycle == 140 || cycle == 180 || cycle == 220 {
+		strength = register * cycle
+	}
+	return
 }
