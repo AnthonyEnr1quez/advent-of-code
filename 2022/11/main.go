@@ -49,6 +49,11 @@ func main() {
 	name, scaryMonkey := newMonkey(inputs)
 	scaryMonkeys[name] = scaryMonkey
 
+	commonDenom := 1
+	for _, monkey := range scaryMonkeys {
+		commonDenom *= monkey.Test.Value
+	}
+
 	for round := 1; round <= 10000; round++ {
 		for name := 0; name < len(coolMonkeys); name++ {
 			coolMonkey = coolMonkeys[name]
@@ -104,13 +109,15 @@ func main() {
 				scaryMonkey.Inspections++
 				// postInspectionWorryLevel := worryLevel / 3
 
-				if worryLevel%scaryMonkey.Test.Value == 0 {
+				new := worryLevel % commonDenom
+
+				if new%scaryMonkey.Test.Value == 0 {
 					destination = scaryMonkey.Test.TrueDest
 				} else {
 					destination = scaryMonkey.Test.FalseDest
 				}
 
-				scaryMonkeys[destination].Items = append(scaryMonkeys[destination].Items, worryLevel)
+				scaryMonkeys[destination].Items = append(scaryMonkeys[destination].Items, new)
 			}
 			scaryMonkey.Items = []int{}
 		}
