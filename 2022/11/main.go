@@ -21,8 +21,9 @@ func main() {
 	scanner := bufio.NewScanner(file)
 	scanner.Split(bufio.ScanLines)
 
-	coolMonkeys := make(map[int]*Monkey)
-	scaryMonkeys := make(map[int]*Monkey)
+	goodMonkeys := make(Barrel)
+	evilMonkeys := make(Barrel)
+
 	inputs := []string{}
 
 	for scanner.Scan() {
@@ -32,117 +33,61 @@ func main() {
 			inputs = append(inputs, input)
 		} else {
 			name, monkey := newMonkey(inputs)
-			coolMonkeys[name] = monkey
+			goodMonkeys[name] = monkey
 
 			name, monkey = newMonkey(inputs)
-			scaryMonkeys[name] = monkey
+			evilMonkeys[name] = monkey
 
 			// reset inputs
 			inputs = []string{}
 		}
 	}
 
-	// add the last coolMonkey, not added during scanning
-	name, coolMonkey := newMonkey(inputs)
-	coolMonkeys[name] = coolMonkey
+	// add the last monkey, not added during scanning
+	name, goodMonkey := newMonkey(inputs)
+	goodMonkeys[name] = goodMonkey
 
-	name, scaryMonkey := newMonkey(inputs)
-	scaryMonkeys[name] = scaryMonkey
+	name, evilMonkey := newMonkey(inputs)
+	evilMonkeys[name] = evilMonkey
 
 	commonDenom := 1
-	for _, monkey := range scaryMonkeys {
+	for _, monkey := range evilMonkeys {
 		commonDenom *= monkey.Test.Value
 	}
 
 	for round := 1; round <= 10000; round++ {
-		for name := 0; name < len(coolMonkeys); name++ {
-			coolMonkey = coolMonkeys[name]
-			scaryMonkey = scaryMonkeys[name]
-
+		for name := 0; name < len(goodMonkeys); name++ {
 			if round <= 20 {
-				for _, item := range coolMonkey.Items {
-					var worryLevel, opValue, destination int
+				goodMonkey = goodMonkeys[name]
 
-					if coolMonkey.Operation.Value == "old" {
-						opValue = item
-					} else {
-						val, _ := strconv.Atoi(coolMonkey.Operation.Value)
-						opValue = val
-					}
+				for _, item := range goodMonkey.Items {
+					destination, postInspectionWorryLevel := goodMonkey.inspect(item, func(wl int) int { return wl / 3 })
 
-					if coolMonkey.Operation.Symbol == "*" {
-						worryLevel = item * opValue
-					} else {
-						worryLevel = item + opValue
-					}
-
-					coolMonkey.Inspections++
-					postInspectionWorryLevel := worryLevel / 3
-
-					if postInspectionWorryLevel%coolMonkey.Test.Value == 0 {
-						destination = coolMonkey.Test.TrueDest
-					} else {
-						destination = coolMonkey.Test.FalseDest
-					}
-
-					coolMonkeys[destination].Items = append(coolMonkeys[destination].Items, postInspectionWorryLevel)
+					goodMonkeys[destination].Items = append(goodMonkeys[destination].Items, postInspectionWorryLevel)
 				}
-				coolMonkey.Items = []int{}
+				goodMonkey.Items = []int{}
 			}
 
-			for _, item := range scaryMonkey.Items {
-				var worryLevel, opValue, destination int
+			evilMonkey = evilMonkeys[name]
+			for _, item := range evilMonkey.Items {
+				destination, postInspectionWorryLevel := evilMonkey.inspect(item, func(wl int) int { return wl % commonDenom })
 
-				if scaryMonkey.Operation.Value == "old" {
-					opValue = item
-				} else {
-					val, _ := strconv.Atoi(scaryMonkey.Operation.Value)
-					opValue = val
-				}
-
-				if scaryMonkey.Operation.Symbol == "*" {
-					worryLevel = item * opValue
-				} else {
-					worryLevel = item + opValue
-				}
-
-				scaryMonkey.Inspections++
-				// postInspectionWorryLevel := worryLevel / 3
-
-				new := worryLevel % commonDenom
-
-				if new%scaryMonkey.Test.Value == 0 {
-					destination = scaryMonkey.Test.TrueDest
-				} else {
-					destination = scaryMonkey.Test.FalseDest
-				}
-
-				scaryMonkeys[destination].Items = append(scaryMonkeys[destination].Items, new)
+				evilMonkeys[destination].Items = append(evilMonkeys[destination].Items, postInspectionWorryLevel)
 			}
-			scaryMonkey.Items = []int{}
+			evilMonkey.Items = []int{}
 		}
 	}
 
-	coolInspections := make([]int, len(coolMonkeys))
-	for i := range coolInspections {
-		coolInspections[i] = coolMonkeys[i].Inspections
-	}
-	sort.Ints(coolInspections)
+	goodMonkeyBusiness := goodMonkeys.monkeyBusiness()
 
-	coolMonkeyBusiness := coolInspections[len(coolInspections)-1] * coolInspections[len(coolInspections)-2]
+	fmt.Println("Level of monkey business after 20 rounds of stuff-slinging simian shenanigans:", goodMonkeyBusiness)
 
-	fmt.Println(coolMonkeyBusiness)
+	evilMonkeyBusiness := evilMonkeys.monkeyBusiness()
 
-	scaryInspections := make([]int, len(scaryMonkeys))
-	for i := range scaryInspections {
-		scaryInspections[i] = scaryMonkeys[i].Inspections
-	}
-	sort.Ints(scaryInspections)
-
-	scaryMonkeyBusiness := scaryInspections[len(scaryInspections)-1] * scaryInspections[len(scaryInspections)-2]
-
-	fmt.Println(scaryMonkeyBusiness)
+	fmt.Println("Level of monkey business after 10000 rounds of stuff-slinging simian shenanigans:", evilMonkeyBusiness)
 }
+
+type Barrel map[int]*Monkey
 
 type Monkey struct {
 	Items       []int
@@ -159,6 +104,16 @@ type Test struct {
 	Value, TrueDest, FalseDest int
 }
 
+func (barrel Barrel) monkeyBusiness() int {
+	inspections := make([]int, len(barrel))
+	for i := range inspections {
+		inspections[i] = barrel[i].Inspections
+	}
+	sort.Ints(inspections)
+
+	return inspections[len(inspections)-1] * inspections[len(inspections)-2]
+}
+
 func newMonkey(inputs []string) (int, *Monkey) {
 	name, _ := strconv.Atoi(strings.Split(inputs[0], " ")[1][:1])
 	items := parseItems(inputs[1])
@@ -170,6 +125,34 @@ func newMonkey(inputs []string) (int, *Monkey) {
 		Operation: operation,
 		Test:      test,
 	}
+}
+
+func (monkey *Monkey) inspect(item int, manage func(int) int) (destination, postInspectionWorryLevel int) {
+	var worryLevel, opValue int
+
+	if monkey.Operation.Value == "old" {
+		opValue = item
+	} else {
+		val, _ := strconv.Atoi(monkey.Operation.Value)
+		opValue = val
+	}
+
+	if monkey.Operation.Symbol == "*" {
+		worryLevel = item * opValue
+	} else {
+		worryLevel = item + opValue
+	}
+
+	monkey.Inspections++
+	postInspectionWorryLevel = manage(worryLevel)
+
+	if postInspectionWorryLevel%monkey.Test.Value == 0 {
+		destination = monkey.Test.TrueDest
+	} else {
+		destination = monkey.Test.FalseDest
+	}
+
+	return
 }
 
 func parseItems(in string) []int {
